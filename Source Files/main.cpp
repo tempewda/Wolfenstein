@@ -158,6 +158,8 @@ int main(int /*argc*/, char*/*argv*/[])
     //start the main loop
     while (!done())
     {
+        SDL_ShowCursor(SDL_DISABLE);  // Hide the cursor
+
         //FLOOR CASTING
         for (int y = 0; y < h; y++)
         {
