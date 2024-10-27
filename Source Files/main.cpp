@@ -4,7 +4,7 @@ All rights reserved.
 */
 
 //#include <SDL/SDL.h>  // Include SDL for mouse warping
-#include<SDL.h>
+#include <SDL.h>
 #include <cmath>
 #include <string>
 #include <vector>
@@ -134,7 +134,7 @@ int main(int /*argc*/, char*/*argv*/[])
     int mouseX, mouseY;  // Variables to hold mouse position
 
     std::vector<Uint32> texture[11];
-    for (int i = 0; i < 8; i++) texture[i].resize(texWidth * texHeight);
+    for (int i = 0; i < 11; i++) texture[i].resize(texWidth * texHeight);
 
     screen(screenWidth, screenHeight, 0, "Raycaster");
 
@@ -155,10 +155,46 @@ int main(int /*argc*/, char*/*argv*/[])
     error |= loadImage(texture[10], tw, th, "pics/greenlight.png");
     if (error) { std::cout << "error loading images" << std::endl; return 1; }
 
+    //weapon textures
+    std::vector<Uint32> weaponTextures[4]; // 1 idle + 3 shoot animation
+    error |= loadImage(weaponTextures[0], tw, th, "pics/weapon_idle.png");
+    error |= loadImage(weaponTextures[1], tw, th, "pics/weapon_fire1.png");
+    error |= loadImage(weaponTextures[2], tw, th, "pics/weapon_fire2.png");
+    error |= loadImage(weaponTextures[3], tw, th, "pics/weapon_fire3.png");
+
+    //track the animation frame and the time between animation updates.
+    int weaponFrame = 0;
+    Uint32 weaponLastFrameTime = 0;
+    bool isShooting = false;
+
     //start the main loop
     while (!done())
     {
         SDL_ShowCursor(SDL_DISABLE);  // Hide the cursor
+
+        //Check if the left mouse button is clicked, and if it is, start the shooting animation.
+        Uint32 currentTime = SDL_GetTicks(); // Get current time in milliseconds
+        int mouseButtonState = SDL_GetMouseState(NULL, NULL);
+
+        if (mouseButtonState & SDL_BUTTON(SDL_BUTTON_LEFT)) {
+            if (!isShooting) {
+                isShooting = true;
+                weaponFrame = 1; // Start shooting animation
+                weaponLastFrameTime = currentTime;
+            }
+        }
+
+        //If the weapon is shooting, cycle through the animation frames
+        if (isShooting) {
+            if (currentTime - weaponLastFrameTime > 100) { // 100ms per frame
+                weaponFrame++;
+                weaponLastFrameTime = currentTime;
+            }
+            if (weaponFrame > 3) { // Reset after the last shooting frame
+                weaponFrame = 0; // Back to idle
+                isShooting = false;
+            }
+        }
 
         //FLOOR CASTING
         for (int y = 0; y < h; y++)
@@ -399,9 +435,46 @@ int main(int /*argc*/, char*/*argv*/[])
             }
         }
 
+        //After rendering the scene, draw the weapon sprite on the bottom center of the screen
+        int weaponWidth = 64;
+        int weaponHeight = 64;
+
+        int weaponX = (screenWidth - weaponWidth) / 2;
+        int weaponY = screenHeight - weaponHeight;
+
+        for (int y = 0; y < weaponHeight; ++y) {
+            for (int x = 0; x < weaponWidth; ++x) {
+                Uint32 color = weaponTextures[weaponFrame][y * weaponWidth + x];
+                if (color != 0x00000000) { // Ignore transparent pixels
+                    buffer[weaponY + y][weaponX + x] = color;
+                }
+            }
+        }
+
+        ////Add Scaling Variables for controlling the weapon's width and height
+        //int weaponScale = 5; // Scale factor for weapon size
+        //int weaponOffsetY = 100; // Offset to bring the weapon higher on the screen
+
+        ////Calculate the Weapon’s Position on the screen using the scaling factors
+        //int weaponWidth = texWidth * weaponScale;
+        //int weaponHeight = texHeight * weaponScale;
+        //int weaponX = (screenWidth - weaponWidth) / 2; // Center horizontally
+        //int weaponY = screenHeight - weaponHeight + weaponOffsetY; // Positioned vertically with offset
+
+        //// Render the weapon texture
+        //for (int y = 0; y < weaponHeight; y++) {
+        //    for (int x = 0; x < weaponWidth; x++) {
+        //        int tx = (x / weaponScale) % texWidth;
+        //        int ty = (y / weaponScale) % texHeight;
+        //        Uint32 color = weaponTextures[weaponFrame][texWidth * ty + tx];
+        //        if (color != 0x000000) // Ignore transparent pixels
+        //            buffer[weaponY + y][weaponX + x] = color;
+        //    }
+        //}
+
         drawBuffer(buffer[0]);
         for (int y = 0; y < h; y++) for (int x = 0; x < w; x++) buffer[y][x] = 0; //clear the buffer instead of cls()
-        
+
         //timing for input and FPS counter
         oldTime = time;
         time = getTicks();
