@@ -1,36 +1,13 @@
-/*
-Copyright (c) 2004, Lode Vandevenne
-All rights reserved.
-*/
-
-//#include <SDL/SDL.h>  // Include SDL for mouse warping
 #include<SDL.h>
 #include <cmath>
 #include <string>
 #include <vector>
 #include <iostream>
+#include <cstdlib>  // For rand() and srand()
+#include <ctime>    // For time()
 
 #include "instantcg.h"
 using namespace InstantCG;
-//using namespace std;
-
-//place the example code below here:
-
-
-//int main(int argc, char* argv[])
-//{
-//    screen(256, 256, 0, "Small Test Script");
-//    for (int x = 0; x < h; ++x)
-//        for (int y = 0; y < w; ++y)
-//            pset(x, y, ColorRGB(x, y, 128));
-//
-//    redraw();
-//    sleep();    
-//
-//    return 0;
-//}
-
-//place the example code below here:
 
 //#define screenWidth 640
 //#define screenHeight 480
@@ -117,14 +94,20 @@ double ZBuffer[screenWidth];
 int spriteOrder[numSprites];
 double spriteDistance[numSprites];
 
+// function used to initialize player with random valid position
+void initializePlayer(double& posX, double& posY, const int worldMap[mapWidth][mapHeight]);
+
 //function used to sort the sprites
 void sortSprites(int* order, double* dist, int amount);
 
 int main(int /*argc*/, char*/*argv*/[])
 {
-    double posX = 22.0, posY = 11.5;  //x and y start position
+    double posX, posY;  // Player position
     double dirX = -1.0, dirY = 0.0; //initial direction vector+
     double planeX = 0.0, planeY = 0.66; //the 2d raycaster version of camera plane
+
+    // Initialize player at random valid location
+    initializePlayer(posX, posY, worldMap);
 
     double time = 0; //time of current frame
     double oldTime = 0; //time of previous frame
@@ -134,7 +117,7 @@ int main(int /*argc*/, char*/*argv*/[])
     int mouseX, mouseY;  // Variables to hold mouse position
 
     std::vector<Uint32> texture[11];
-    for (int i = 0; i < 8; i++) texture[i].resize(texWidth * texHeight);
+    for (int i = 0; i < 11; i++) texture[i].resize(texWidth * texHeight);
 
     screen(screenWidth, screenHeight, 0, "Raycaster");
 
@@ -401,7 +384,7 @@ int main(int /*argc*/, char*/*argv*/[])
 
         drawBuffer(buffer[0]);
         for (int y = 0; y < h; y++) for (int x = 0; x < w; x++) buffer[y][x] = 0; //clear the buffer instead of cls()
-        
+
         //timing for input and FPS counter
         oldTime = time;
         time = getTicks();
@@ -494,5 +477,27 @@ void sortSprites(int* order, double* dist, int amount)
     for (int i = 0; i < amount; i++) {
         dist[i] = sprites[amount - i - 1].first;
         order[i] = sprites[amount - i - 1].second;
+    }
+}
+
+// Initialize player with random valid position
+void initializePlayer(double& posX, double& posY, const int worldMap[mapWidth][mapHeight])
+{
+    bool foundEmptySpace = false;
+    srand(time(NULL)); // Initialize random seed
+
+    while (!foundEmptySpace)
+    {
+        // Generate random coordinates
+        int randX = rand() % mapWidth;
+        int randY = rand() % mapHeight;
+
+        // Check if the selected tile is an empty space (value 0 in worldMap)
+        if (worldMap[randX][randY] == 0)
+        {
+            posX = randX + 0.5; // Set player position to the center of the tile
+            posY = randY + 0.5;
+            foundEmptySpace = true;
+        }
     }
 }
