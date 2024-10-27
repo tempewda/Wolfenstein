@@ -1,7 +1,7 @@
 # Wolfenstein
 
 
-A simple navigation game showcasing raycasting, which takes a simple 2D array storing walls, map data like this
+A simple navigation game engine showcasing raycasting, which takes a simple 2D array storing walls, map data like this
 
 
 int worldMap[mapWidth][mapHeight] =<br>
@@ -33,7 +33,7 @@ int worldMap[mapWidth][mapHeight] =<br>
 };<br>
 
 
-and renders it into a 3D environment, using just math!!
+and renders it into a 3D environment, using just math and some c++!!
 
 
 ## Features
